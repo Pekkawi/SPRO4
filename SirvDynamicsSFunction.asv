@@ -480,13 +480,13 @@ Dist_F   = block.InputPort(5).Data(4:6); %external forces. ports 1-3
 % The experimental determination of Ct and Cq should be adjusted to
 % model using kg instead of ounces or lb
 % Mb = (quad.dctcq*(w.^2)) + (Dist_tau);  %(dctcq*(w.^2)); % Mb = [tau1 tau2 tau3]'
- tau_motorGyro = [Q*quad.Jm*2*pi/60*(-w1-w3+w2+w4); P*quad.Jm*2*pi/60*(w1+w3-w2-w4); 0]; % Note: 2*pi/60 required to convert from RPM to radians/s
- Mb = (quad.dctcq*(w.^2))+ tau_motorGyro + (Dist_tau);  % Mb = [tau1 tau2 tau3]' /Mb=total moment acting on quadcopter
+ tau_motorGyro = [Q*quadModel.Jm*2*pi/60*(-w1-w3+w2+w4); P*quadModel.Jm*2*pi/60*(w1+w3-w2-w4); 0]; % Note: 2*pi/60 required to convert from RPM to radians/s
+ Mb = (quadModel.dctcq*(w.^2))+ tau_motorGyro + (Dist_tau);  % Mb = [tau1 tau2 tau3]' /Mb=total moment acting on quadcopter
 
 % Thrust due to motor speed
 % Force should be in units of Newtons for simplicity in calculating
 % the acceleration in the angular velocity state equation
-Fb = [0; 0; sum(quad.ct*(w.^2))];   %[0, 0, sum(ct*w.^2)]'
+Fb = [0; 0; sum(quadModel.ct*(w.^2))];   %[0, 0, sum(ct*w.^2)]'
 
 % Obtain dP dQ dR
 omb_bi = [P; Q; R];
@@ -494,7 +494,7 @@ OMb_bi = [ 0,-R, Q;
            R, 0,-P;
           -Q, P, 0];
 
-b_omdotb_bi = quad.Jbinv*(Mb-OMb_bi*quad.Jb*omb_bi);
+b_omdotb_bi = quad.Jbinv*(Mb-OMb_bi*quadM.Jb*omb_bi);
 H_Phi = [1,tan(The)*sin(Phi), tan(The)*cos(Phi);
          0,         cos(Phi),         -sin(Phi);
          0,sin(Phi)/cos(The),cos(Phi)/cos(The)];   
