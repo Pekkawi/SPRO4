@@ -44,6 +44,14 @@ function setup(block)
   block.OutputPort(i).SamplingMode     = 'Sample'; %set to 'Inherited' for continuous
   end
 
+%   %In case we need to override the input port properties.
+%   block.InputPort(1).DatatypeID  = 0;  % 0 sets to double in simulink
+%   block.InputPort(1).Complexity  = 'Real'; %This means that the first input port is expecting a real number (as opposed to a complex number).
+%   
+%   %In case we need to override the output port properties.
+%   block.OutputPort(1).DatatypeID  = 0; % double
+%   block.OutputPort(1).Complexity  = 'Real'; %This means that the first output port will output a real number.
+
   % Register the parameters.
   block.NumDialogPrms     = 2; %specifying that your block expects exactly two parameters
   
@@ -51,15 +59,25 @@ function setup(block)
   block.NumContStates = 12; %Continuous states are used in the simulation of continuous dynamic systems. They represent the state variables of the system that change continuously over time, as opposed to discrete states which change at specific time steps.
 
   % Register the sample times.
+  %  [0 offset]            : Continuous sample time
+  %  [positive_num offset] : Discrete sample time (e.g. [0.1 offset])
+  %  if you set the sample time to [0.1 0.01], the block%s output would be updated
+  %  every 0.1 seconds, starting from 0.01 seconds into the simulation.
+  %
+  %  [-1, 0]               : Inherited sample time (the block inherits its sample time from the block that drives it).
+  %  [-2, 0]               : Variable sample time (can change during
+  %  simulation)
   block.SampleTimes = [0 0]; %A sample time of [0 0] means that the block
   % has a continuous sample time, i.e., its output is computed at every time step of the simulation.
 
   % -----------------------------------------------------------------
   % Options
   % -----------------------------------------------------------------
-  % Specify if Accelerator should use TLC or call back to the  MATLAB file.
-  % Simulink’s Accelerator mode is a simulation mode that speeds up the execution of your model by automatically generating, compiling, and executing C code.
-  % If AccelRunOnTLC is true, Simulink generates Target Language Compiler (TLC) code for the block 
+  % Specify if Accelerator should use TLC or call back to the 
+  % MATLAB file. Simulink’s Accelerator mode is a simulation mode that speeds
+  % up the execution of your model by automatically generating, compiling, and executing C code.
+  % If AccelRunOnTLC is true, Simulink generates Target Language Compiler (TLC) code for the block
+  % and uses this code to run the block in Accelerator mode.
   block.SetAccelRunOnTLC(false);
   
   % Specify the block simStateCompliance. The allowed values are:
@@ -89,18 +107,112 @@ function setup(block)
 %   %                      responsible for calling this method
 %   %                      explicitly at the start of the setup method.
 %   %   C-Mex counterpart: mdlCheckParameters
+%   %
    block.RegBlockMethod('CheckParameters', @CheckPrms);
 
+%   %SAMPLING MODE
+%   % SetInputPortSamplingMode:
+%   %   Functionality    : Check and set input and output port 
+%   %                      attributes and specify whether the port is operating 
+%   %                      in sample-based or frame-based mode
+%   %   C-Mex counterpart: mdlSetInputPortFrameData.
+%   %   (The DSP System Toolbox is required to set a port as frame-based)
+%   %
+%   block.RegBlockMethod('SetInputPortSamplingMode', @SetInpPortFrameData);
+%   % this will probably be deleted since we have already set the sampling
+%     mode for all input/output ports
+  
+%   %INPUT PORT DIMENSIONS
+%   % SetInputPortDimensions:
+%   %   Functionality    : Check and set the input and optionally the output
+%   %                      port dimensions.
+%   %   C-Mex counterpart: mdlSetInputPortDimensionInfo
+%   %
+%   block.RegBlockMethod('SetInputPortDimensions', @SetInpPortDims); 
+%   % this will probably be deleted since we have already set the dimension
+%   % for all input ports
+
+%   %OUTPUT PORT DIMENSIONS
+%   % SetOutputPortDimensions:
+%   %   Functionality    : Check and set the output and optionally the input
+%   %                      port dimensions.
+%   %   C-Mex counterpart: mdlSetOutputPortDimensionInfo
+%   %
+%   block.RegBlockMethod('SetOutputPortDimensions', @SetOutPortDims);
+%   % this will probably be deleted since we have already set the dimension
+%   % for all OUTPUT ports
+    
+
+%   %INPUT PORT DATATYPE
+%   % SetInputPortDatatype:
+%   %   Functionality    : Check and set the input and optionally the output
+%   %                      port datatypes.
+%   %   C-Mex counterpart: mdlSetInputPortDataType
+%   %
+%   block.RegBlockMethod('SetInputPortDataType', @SetInpPortDataType);
+%   % this will probably be deleted since we have already set the DATATYPE
+%   % for all INPUT ports
+
+%   %OUTPUT PORT DATATYPE
+%   % SetOutputPortDatatype:
+%   %   Functionality    : Check and set the output and optionally the input
+%   %                      port datatypes.
+%   %   C-Mex counterpart: mdlSetOutputPortDataType
+%   %
+%   block.RegBlockMethod('SetOutputPortDataType', @SetOutPortDataType);
+%   % this will probably be deleted since we have already set the DATATYPE
+%   % for all OUTPUT ports
+  
+%   %INPUT PORT COMPLEXITY
+%   % SetInputPortComplexSignal:
+%   %   Functionality    : Check and set the input and optionally the output
+%   %                      port complexity attributes.
+%   %   C-Mex counterpart: mdlSetInputPortComplexSignal
+%   %
+%   block.RegBlockMethod('SetInputPortComplexSignal', @SetInpPortComplexSig);
+
+%   %OUTPUT PORT COMPLEXITY
+%   % SetOutputPortComplexSignal:
+%   %   Functionality    : Check and set the output and optionally the input
+%   %                      port complexity attributes.
+%   %   C-Mex counterpart: mdlSetOutputPortComplexSignal
+%   %
+%   block.RegBlockMethod('SetOutputPortComplexSignal', @SetOutPortComplexSig);
+  
+%   %OK
+%   % PostPropagationSetup:
+%   %   Functionality    : Set up the work areas and the state variables. You can
+%   %                      also register run-time methods here.
+%   %   C-Mex counterpart: mdlSetWorkWidths
+%   %
+%   block.RegBlockMethod('PostPropagationSetup', @DoPostPropSetup);
+% 
 %   % -----------------------------------------------------------------
 %   % Register methods called at run-time
 %   % -----------------------------------------------------------------
+%   
+%   % OK
+%   % ProcessParameters:
+%   %   Functionality    : Call to allow an update of run-time parameters.
+%   %   C-Mex counterpart: mdlProcessParameters
+%   %  
+%   block.RegBlockMethod('ProcessParameters', @ProcessPrms);
 
+  % OK
   % InitializeConditions:
   %   Functionality    : Call to initialize the state and the work
   %                      area values.
   %   C-Mex counterpart: mdlInitializeConditions
   % 
   block.RegBlockMethod('InitializeConditions', @InitializeConditions);
+  
+%   % OK
+%   % Start:
+%   %   Functionality    : Call to initialize the state and the work
+%   %                      area values.
+%   %   C-Mex counterpart: mdlStart
+%   %
+%   block.RegBlockMethod('Start', @Start);
 
   % OK
   % Outputs:
@@ -110,6 +222,14 @@ function setup(block)
   %
   block.RegBlockMethod('Outputs', @Outputs);
 
+%   % OK
+%   % Update:
+%   %   Functionality    : Call to update the discrete states
+%   %                      during a simulation step.
+%   %   C-Mex counterpart: mdlUpdate
+%   %
+%   block.RegBlockMethod('Update', @Update);
+
   % OK
   % Derivatives:
   %   Functionality    : Call to update the derivatives of the
@@ -118,6 +238,55 @@ function setup(block)
   %
   block.RegBlockMethod('Derivatives', @Derivatives);
   
+%   % OK
+%   % Projection:
+%   %   Functionality    : Call to update the projections during a
+%   %                      simulation step.
+%   %   C-Mex counterpart: mdlProjections
+%   %
+%   block.RegBlockMethod('Projection', @Projection);
+  
+%   % OK
+%   % SimStatusChange:
+%   %   Functionality    : Call when simulation enters pause mode
+%   %                      or leaves pause mode.
+%   %   C-Mex counterpart: mdlSimStatusChange
+%   %
+%   block.RegBlockMethod('SimStatusChange', @SimStatusChange);
+%   
+%   % OK
+%   % Terminate:
+%   %   Functionality    : Call at the end of a simulation for cleanup.
+%   %   C-Mex counterpart: mdlTerminate
+%   %
+%   block.RegBlockMethod('Terminate', @Terminate);
+
+%   % OK
+%   % GetSimState:
+%   %   Functionality    : Return the SimState of the block.
+%   %   C-Mex counterpart: mdlGetSimState
+%   %
+%   block.RegBlockMethod('GetSimState', @GetSimState);
+%   
+%   %
+%   % SetSimState:
+%   %   Functionality    : Set the SimState of the block using a given value.
+%   %   C-Mex counterpart: mdlSetSimState
+%   %
+%   block.RegBlockMethod('SetSimState', @SetSimState);
+
+  % -----------------------------------------------------------------
+  % Register the methods called during code generation.
+  % -----------------------------------------------------------------
+  
+%   %
+%   % WriteRTW:
+%   %   Functionality    : Write specific information to model.rtw file.
+%   %   C-Mex counterpart: mdlRTW
+%   %
+%   block.RegBlockMethod('WriteRTW', @WriteRTW);
+% %endfunction
+
 % -------------------------------------------------------------------
 % The local functions below are provided to illustrate how you may implement
 % the various block methods listed above.
@@ -138,6 +307,94 @@ end
     end
 end
      
+     
+     %      if ~exist(model)
+%        me = MSLException(block.BlockHandle, message('Simulink:blocks:invalidParameter'));
+%        throw(me);
+%      end
+     
+%     if ~strcmp(class(a), 'double')
+%       me = MSLException(block.BlockHandle, message('Simulink:blocks:invalidParameter'));
+%       throw(me);
+%     end
+% %endfunction
+% 
+% function ProcessPrms(block)
+% 
+%   block.AutoUpdateRuntimePrms;
+%  
+% %endfunction
+% 
+% function SetInpPortFrameData(block, idx, fd)
+%   
+%   block.InputPort(idx).SamplingMode = fd;
+%   block.OutputPort(1).SamplingMode  = fd;
+%   
+% %endfunction
+% 
+% function SetInpPortDims(block, idx, di)
+%   
+%   block.InputPort(idx).Dimensions = di;
+%   block.OutputPort(1).Dimensions  = di;
+% 
+% %endfunction
+% 
+% function SetOutPortDims(block, idx, di) 
+%   
+%   block.OutputPort(idx).Dimensions = di;
+%   block.InputPort(1).Dimensions    = di;
+% 
+% %endfunction
+% 
+% function SetInpPortDataType(block, idx, dt)
+%   
+%   block.InputPort(idx).DataTypeID = dt;
+%   block.OutputPort(1).DataTypeID  = dt;
+% 
+% %endfunction
+%   
+% function SetOutPortDataType(block, idx, dt)
+% 
+%   block.OutputPort(idx).DataTypeID  = dt;
+%   block.InputPort(1).DataTypeID     = dt;
+% 
+% %endfunction  
+% 
+% function SetInpPortComplexSig(block, idx, c)
+%   
+%   block.InputPort(idx).Complexity = c;
+%   block.OutputPort(1).Complexity  = c;
+% 
+% %endfunction 
+%   
+% function SetOutPortComplexSig(block, idx, c)
+% 
+%   block.OutputPort(idx).Complexity = c;
+%   block.InputPort(1).Complexity    = c;
+% 
+% %endfunction 
+%     
+% function DoPostPropSetup(block)
+%
+%   block.NumDworks = 2;
+%   
+%   block.Dwork(1).Name            = 'x1';
+%   block.Dwork(1).Dimensions      = 1;
+%   block.Dwork(1).DatatypeID      = 0;      % double
+%   block.Dwork(1).Complexity      = 'Real'; % real
+%   block.Dwork(1).UsedAsDiscState = true;
+%   
+%   block.Dwork(2).Name            = 'numPause';
+%   block.Dwork(2).Dimensions      = 1;
+%   block.Dwork(2).DatatypeID      = 7;      % uint32
+%   block.Dwork(2).Complexity      = 'Real'; % real
+%   block.Dwork(2).UsedAsDiscState = true;
+%   
+%   % Register all tunable parameters as runtime parameters.
+%   block.AutoRegRuntimePrms;
+% 
+% %endfunction
+
 function InitializeConditions(block)
 % Initialize 12 States
 
@@ -162,17 +419,37 @@ Y = IC.Y;
 Z = IC.Z;
 
 init = [P,Q,R,Phi,Theta,Psi,U,V,W,X,Y,Z]; % creates a vector init that contains all the initial conditions.
-    for i=1:12
-    block.OutputPort(i).Data = init(i);
-    block.ContStates.Data(i) = init(i);
-    end
+for i=1:12
+block.OutputPort(i).Data = init(i);
+block.ContStates.Data(i) = init(i);
 end
+end
+% function Start(block)
+% 
+%   block.Dwork(1).Data = 0;
+%   block.Dwork(2).Data = uint32(1); 
+%    
+% %endfunction
+% 
+% function WriteRTW(block)
+%   
+%    block.WriteRTWParam('matrix', 'M',    [1 2; 3 4]);
+%    block.WriteRTWParam('string', 'Mode', 'Auto');
+   
+%endfunction
 
 function Outputs(block)
-    for i = 1:12
-    block.OutputPort(i).Data = block.ContStates.Data(i);
-    end
+for i = 1:12
+  block.OutputPort(i).Data = block.ContStates.Data(i);
 end
+end
+%endfunction
+
+% function Update(block)
+%   
+%   block.Dwork(1).Data = block.InputPort(1).Data;
+  
+%endfunction
 
 function Derivatives(block)
 % Name all the states and motor inputs
@@ -241,7 +518,7 @@ Rib = [cos(Psi)*cos(Theta) cos(Psi)*sin(Theta)*sin(Phi)-sin(Psi)*cos(Phi) cos(Ps
        sin(Psi)*cos(Theta) sin(Psi)*sin(Theta)*sin(Phi)+cos(Psi)*cos(Phi) sin(Psi)*sin(Theta)*cos(Phi)-cos(Psi)*sin(Phi);
        -sin(Theta)         cos(Theta)*sin(Phi)                            cos(Theta)*cos(Phi)];
 Rbi = Rib'; %calculates the transpose of the rotation matrix Rib. So Rbi:transforms vectors from inertial frame to body frame.
-ge = [0; 0; -quad.g]; % (ge=Gravity in Earth/inertial frame) gravitational acceleration in the inertial frame (directed downwards and hence the negative in Z)
+ge = [0; 0; -quadModel.g]; % (ge=Gravity in Earth/inertial frame) gravitational acceleration in the inertial frame (directed downwards and hence the negative in Z)
 gb = Rbi*ge; % (gb=Gravity in Body frame) transformation of the vector from world frame to body frame
 Dist_Fb = Rbi*Dist_F; %Calculates the ext forces in the body frame by transforming the ext. force vector from inertial frame to body frame.
 
@@ -272,3 +549,4 @@ f = [dP dQ dR dPhi dTheta dPsi dU dV dW dX dY dZ].'; %creates column vector f
 block.Derivatives.Data = f; %assigns vector f to the derivatives.Data property of the block. Tells simulink to use these derivatives toupdate the state of the quadcopter
 
 end
+%endfunction
