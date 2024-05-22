@@ -123,11 +123,10 @@ function setup(block)
 % the various block methods listed above.
 % -------------------------------------------------------------------
 end
- function CheckPrms(block)
-     quad   = block.DialogPrm(1).Data;
-     IC     = block.DialogPrm(2).Data;
-
-      % Check that 'quad' is a structure
+function CheckPrms(block)
+quad   = block.DialogPrm(1).Data;
+IC     = block.DialogPrm(2).Data;
+% Check that 'quad' is a structure
     if ~isstruct(quad)
         error('The first dialog parameter must be a structure.');
     end
@@ -138,8 +137,7 @@ end
     end
 end
      
-function InitializeConditions(block)
-% Initialize 12 States
+function InitializeConditions(block) % Initialize 12 States
 
 IC = block.DialogPrm(2).Data; %retrieves the initial conditions (IC) from the second dialog parameter of the block.
 
@@ -191,12 +189,12 @@ Phi = block.ContStates.Data(4);
 Theta = block.ContStates.Data(5);
 Psi = block.ContStates.Data(6);
 % U V W in units of m/s
-U = block.ContStates.Data(7);
-V = block.ContStates.Data(8);
+U = block.ContStates.Data(7); %not used
+V = block.ContStates.Data(8); %not used
 W = block.ContStates.Data(9);
 % X Y Z in units of m
-X = block.ContStates.Data(10);
-Y = block.ContStates.Data(11);
+X = block.ContStates.Data(10); %not used
+Y = block.ContStates.Data(11); %not used
 Z = block.ContStates.Data(12);
 % w values in rev/min! NOT radians/s!!!!
 w1 = block.InputPort(1).Data;
