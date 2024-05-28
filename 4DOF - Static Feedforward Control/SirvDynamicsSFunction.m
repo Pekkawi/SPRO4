@@ -252,7 +252,7 @@ dTheta = Phidot(2);
 dPsi = Phidot(3);
 dW = b_dv(3);
 dZ = i_dp(3);
-% Rough rule to impose a "ground" boundary...could easily be improved...
+% Rough rule to impose a "ground" boundary
 if ((Z<=0) && (dZ<=0)) % checks quadcopter altitude and vertical velocity dZ. If ground is met it sets dZ to zero
     dZ = 0;
     block.ContStates.Data(8) = 0; %resets the copters altitude in the state vector to zero to prevent sinking into the ground
